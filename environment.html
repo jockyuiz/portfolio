@@ -121,8 +121,19 @@ void main() {
             animate();
             
             function init() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', 'data/meshes/teapot.obj', true);
+                xhr.responseType = 'blob';
+                xhr.onload = function(e) {
+                    if (this.status == 200) {
+                        var myBlob = this.response;
+                        // myBlob is now the blob that the object URL pointed to.
+                        loadFile(myBlob);
+                    }
+                };
+                xhr.send();
                 loadEnvironmentMap('data/textures/LancellottiChapel/');
-            
+
                 addLight(new THREE.Vector3(50, 50, 100), new THREE.Vector3(0.8, 0.8, 0.8));
                 addLight(new THREE.Vector3(-50, -50, -50), new THREE.Vector3(0.5, 0.5, 0.6));
             }
