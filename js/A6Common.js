@@ -205,6 +205,34 @@ function loadFile(file) {
     reader.readAsText(file);
 }
 
+function loadTeapot(){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/meshes/teapot.obj', true);
+    xhr.responseType = 'blob';
+    xhr.onload = function(e) {
+        if (this.status == 200) {
+            var myBlob = this.response;
+            // myBlob is now the blob that the object URL pointed to.
+            loadFile(myBlob);
+        }
+    };
+    xhr.send();
+}
+
+function loadSphere(){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/meshes/sphere.obj', true);
+    xhr.responseType = 'blob';
+    xhr.onload = function(e) {
+        if (this.status == 200) {
+            var myBlob = this.response;
+            // myBlob is now the blob that the object URL pointed to.
+            loadFile(myBlob);
+        }
+    };
+    xhr.send();
+}
+
 function loadTexture(file, uniformName) {
     var reader = new FileReader();
     reader.addEventListener('load', function(event) {
@@ -218,6 +246,60 @@ function loadTexture(file, uniformName) {
     });
     reader.readAsDataURL(file);
 }
+
+function loadFlower(){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/textures/Flower.png', true);
+    xhr.responseType = 'blob';
+    xhr.onload = function(e) {
+        if (this.status == 200) {
+            var myBlob = this.response;
+            // myBlob is now the blob that the object URL pointed to.
+            loadTexture(myBlob,'diffuseTexture');
+        }
+    };
+    xhr.send();
+}
+
+function loadTexMap(){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/textures/earthmap1k.jpg', true);
+    xhr.responseType = 'blob';
+    xhr.onload = function(e) {
+        if (this.status == 200) {
+            var myBlob = this.response;
+            // myBlob is now the blob that the object URL pointed to.
+            loadTexture(myBlob,'diffuseTexture');
+        }
+    };
+    xhr.send();
+}
+
+function loadNormMap(){
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'data/textures/earthNormalMap_1k.png', true);
+    xhr.responseType = 'blob';
+    xhr.onload = function(e) {
+        if (this.status == 200) {
+            var myBlob = this.response;
+            // myBlob is now the blob that the object URL pointed to.
+            loadTexture(myBlob,'normalMap');
+        }
+    };
+    xhr.send();
+}
+
+function loadFlowerTeapot(){
+    loadTeapot();
+    loadFlower();
+}
+
+function loadGlobe(){
+    loadSphere();
+    loadTexMap();
+    loadNormMap();
+}
+
 
 function loadEnvironmentMap(basePath) {
     var textureLoader = new THREE.CubeTextureLoader();
