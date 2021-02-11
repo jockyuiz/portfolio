@@ -16,6 +16,8 @@
     <body>
     <div id="container">
         <div id="controlBar" style="text-align: center;">
+            <input type="button" id="meshInputTeapot" value="Use a Teapot" onclick="loadTeapot()">
+            <input type="button" id="meshInputSphere" value="Use a Sphere" onclick="loadSphere()">
             <input type="file" id="meshInputFile" style="display: none;" onchange="loadFile(this.files[0])">
             <input type="button" id="meshInputButton" value="Select OBJ File" onclick="document.getElementById('meshInputFile').click()">
             <label><input type="checkbox" id="showAxesCheckbox" onchange="toggleAxes(this.checked)" checked="true">Show Axes</label>
@@ -116,24 +118,14 @@ void main() {
 ------------------------------------------------------------------------------>
         <script src="js/A6Common.js"></script>
         <script>
+
             commonInit(false);
             init();
             animate();
             
             function init() {
-                var xhr = new XMLHttpRequest();
-                xhr.open('GET', 'data/meshes/teapot.obj', true);
-                xhr.responseType = 'blob';
-                xhr.onload = function(e) {
-                    if (this.status == 200) {
-                        var myBlob = this.response;
-                        // myBlob is now the blob that the object URL pointed to.
-                        loadFile(myBlob);
-                    }
-                };
-                xhr.send();
-                loadEnvironmentMap('data/textures/LancellottiChapel/');
 
+                loadEnvironmentMap('data/textures/LancellottiChapel/');
                 addLight(new THREE.Vector3(50, 50, 100), new THREE.Vector3(0.8, 0.8, 0.8));
                 addLight(new THREE.Vector3(-50, -50, -50), new THREE.Vector3(0.5, 0.5, 0.6));
             }
