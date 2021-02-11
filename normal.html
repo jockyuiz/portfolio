@@ -16,6 +16,7 @@
     <body>
     <div id="container">
         <div id="controlBar" style="text-align: center;">
+            <input type="button" id="meshInputSphere" value="Use default Globe" onclick="loadGlobe()">
             <input type="file" id="meshInputFile" style="display: none;" onchange="loadFile(this.files[0])">
             <input type="button" id="meshInputButton" value="Select OBJ File" onclick="document.getElementById('meshInputFile').click()">
             <input type="file" id="texInputFile" style="display: none;" onchange="loadTexture(this.files[0], 'diffuseTexture')">
