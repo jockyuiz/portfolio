@@ -67,6 +67,7 @@ function commonInit() {
     camera.position.z = 10;
 
     scene = new THREE.Scene();
+    scene.background = new THREE.Color( 1, 1, 1 );
 
     renderer = new THREE.WebGLRenderer({ antialias: true }); // WebGLRenderer CanvasRenderer
     renderer.setClearColor(0x404040);
