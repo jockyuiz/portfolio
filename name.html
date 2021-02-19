@@ -1,72 +1,149 @@
 <!DOCTYPE html>
+<!-- Subdivision of text - format correction -->
 <html lang="en">
 <head>
-    <title>Name - animation</title>
+    <title>Phong reflectance</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
         body {
             font-family: Monospace;
-            background-color: #707080;
+            background-color: #ffffff;
             margin: 0px;
             overflow: hidden;
         }
     </style>
 </head>
-
 <body>
-<div id="container"></div>
+<div id="container">
+    <div id="controlBar" style="text-align: center;">
+        <input type="button" id="meshInputTeapot" value="Use default Teapot" onclick="loadFlowerTeapot()">
+        <input type="file" id="meshInputFile" style="display: none;" onchange="loadFile(this.files[0])">
+        <input type="button" id="meshInputButton" value="Select OBJ File" onclick="document.getElementById('meshInputFile').click()">
+        <label><input type="checkbox" id="showAxesCheckbox" onchange="toggleAxes(this.checked)" checked="true">Checkbox</label>
+        <br/>
+        Slide parameter:
+        <input type="range" id="ambientRange" min="0.0" max="2.0" step="0.1" value="1.1" oninput="setUniformLog('ambient', this.value)">
+        <br>
+        Instruction text here...
+    </div>
+</div>
 
-<script type="x-shader/x-vertex" id="vertexshader">
+
+<!-----------------------------------------------------------------------------
+        VERTEX SHADER
+------------------------------------------------------------------------------>
+<script id="vertexShader" type="x-shader/x-vertex">
+    // = object.matrixWorld
+    // uniform mat4 modelMatrix;
+
+    // = camera.matrixWorldInverse * object.matrixWorld
+    // uniform mat4 modelViewMatrix;
+
+    // = camera.projectionMatrix
+    // uniform mat4 projectionMatrix;
+
+    // = camera.matrixWorldInverse
+    // uniform mat4 viewMatrix;
+
+    // = inverse transpose of modelViewMatrix
+    // uniform mat3 normalMatrix;
+
+    // = camera position in world space
+    // uniform vec3 cameraPosition;
+
+    // RenderMesh Input
+    // attribute vec3 position;
+    // attribute vec3 normal;
+    // attribute vec2 uv;
 
     uniform float amplitude;
 
     attribute vec3 customColor;
     attribute vec3 displacement;
 
-    varying vec3 vNormal;
+    varying vec3 vNormal; // normal at the vertex in eye space
+    varying vec4 vPosition; // vertex position in eye space
     varying vec3 vColor;
 
     void main() {
-
-        vNormal = normal;
+        // We have to use the inverse transpose of the modelview matrix for the normal
+        vNormal = normalize((normalMatrix * normal).xyz);
         vColor = customColor;
 
+        //position that dynamic changes over time
         vec3 newPosition = position + normal * amplitude * displacement;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+        // Calculate point in eye space
+        vPosition = modelViewMatrix * vec4(newPosition, 1.0);
 
+        // Calculate projected point
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
     }
-
 </script>
+<!-----------------------------------------------------------------------------
+        FRAGMENT SHADER
+------------------------------------------------------------------------------>
+<script id="fragmentShader" type="x-shader/x-fragment">
+    #define M_PI 3.141592653589793238
 
-<script type="x-shader/x-fragment" id="fragmentshader">
+    uniform float ambient;
 
-    varying vec3 vNormal;
+    varying vec3 vNormal; // fragment normal in eye space
+    varying vec4 vPosition; // fragment position in eye space
     varying vec3 vColor;
 
+    vec3 to_sRGB(vec3 c) { return pow(c, vec3(1.0/2.2)); }
+    vec3 from_sRGB(vec3 c) { return pow(c, vec3(2.2)); }
+
     void main() {
+        // interpolating normals will change the length of the normal, so renormalize the normal.
+        const float roughness = 20.0;
+        const vec3 lightPositions = vec3(50.0, 50.0, 100.0);
+        const vec3 lightColors = vec3(2500.0, 2500.0, 2500.0);
 
-        const float ambient = 0.4;
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(-vPosition.xyz);
+        vec3 finalColor = ambient * vColor;
 
-        vec3 light = vec3( 1.0 );
-        light = normalize( light );
+        // distance from light to the position of the vertex
+        float r = length(lightPositions - vPosition.xyz);
+        //light direction at the vertex
+        vec3 L = normalize(lightPositions - vPosition.xyz);
+        vec3 H = normalize(L + V);
 
-        float directional = max( dot( vNormal, light ), 0.0 );
+        // calculate diffuse term
+        vec3 Idiff = vColor / M_PI * max(dot(N, L), 0.0);
 
-        gl_FragColor = vec4( ( directional + ambient ) * vColor, 1.0 );
+        // calculate specular term
+        vec3 Ispec = vec3(1.0) * pow(max(dot(N, H), 0.0), 1.0 / roughness);
 
+        vec3 lambertian = lightColors * (Idiff + Ispec) / (r*r);
+        finalColor += lambertian;
+
+        gl_FragColor = vec4(finalColor,1.0);
+
+        // Only shade if facing the light
+        // Color the back faces an identifiable color
+        /*if (gl_FrontFacing) {
+            gl_FragColor = vec4(to_sRGB(finalColor * exposure), 1.0);
+        } else {
+            gl_FragColor = vec4(170.0/255.0, 160.0/255.0, 0.0, 1.0);
+        }*/
     }
-
 </script>
+<!-----------------------------------------------------------------------------
+        END SHADERS
+------------------------------------------------------------------------------>
+
 
 <script type="module">
 
-    import * as THREE from './build/three.module.js/';
+    import * as THREE from './build/three.module.js';
 
-    import Stats from './jsm/libs/stats.module.js/';
+    import Stats from './jsm/libs/stats.module.js';
 
-    import { TrackballControls } from './jsm/controls/TrackballControls.js/';
-    import { TessellateModifier } from './jsm/modifiers/TessellateModifier.js/';
+    import { TrackballControls } from './jsm/controls/TrackballControls.js';
+    import { TessellateModifier } from './jsm/modifiers/TessellateModifier.js';
 
     let renderer, scene, camera, stats;
 
@@ -74,11 +151,15 @@
 
     let mesh, uniforms;
 
+    let meshMaterial;
+
+    let lightPositions = [];
+
     const WIDTH = window.innerWidth;
     const HEIGHT = window.innerHeight;
 
     const loader = new THREE.FontLoader();
-    loader.load( 'fonts/helvetiker_regular.typeface.json/', function ( font ) {
+    loader.load( 'fonts/helvetiker_bold.typeface.json', function ( font ) {
 
         init( font );
         animate();
@@ -87,11 +168,11 @@
 
     function init( font ) {
 
-        camera = new THREE.PerspectiveCamera( 40, WIDTH / HEIGHT, 1, 10000 );
-        camera.position.set( - 100, 100, 200 );
+        camera = new THREE.PerspectiveCamera( 50, WIDTH / HEIGHT, 1, 10000 );
+        camera.position.set( 0, 0, 200 );
 
         scene = new THREE.Scene();
-        scene.background = new THREE.Color( 0x050505 );
+        scene.background = new THREE.Color( 1, 1, 1 );
 
         //
 
@@ -99,11 +180,11 @@
 
             font: font,
 
-            size: 25,
+            size: 35,
             height: 5,
             curveSegments: 3,
 
-            bevelThickness: 2,
+            bevelThickness: 1,
             bevelSize: 1,
             bevelEnabled: true
 
@@ -111,7 +192,7 @@
 
         geometry.center();
 
-        const tessellateModifier = new TessellateModifier( 8, 6 );
+        const tessellateModifier = new TessellateModifier(1,3);
 
         geometry = tessellateModifier.modify( geometry );
 
@@ -128,9 +209,9 @@
 
             const index = 9 * f;
 
-            const h = 0.1 * Math.random();
-            const s = 0.6 + 0.1 * Math.random();
-            const l = 0.6 + 0.1 * Math.random();
+            const h = 0;
+            const s = 0.2 + 0.3 * Math.random();
+            const l = 0.2 + 0.3 * Math.random();
 
             color.setHSL( h, s, l );
 
@@ -157,21 +238,22 @@
 
         uniforms = {
 
-            amplitude: { value: 0.0 }
+            amplitude: { value: 0.0 },
 
         };
 
-        const shaderMaterial = new THREE.ShaderMaterial( {
+        meshMaterial = new THREE.ShaderMaterial( {
 
             uniforms: uniforms,
-            vertexShader: document.getElementById( 'vertexshader' ).textContent,
-            fragmentShader: document.getElementById( 'fragmentshader' ).textContent
+            vertexShader: document.getElementById( 'vertexShader' ).textContent,
+            fragmentShader: document.getElementById( 'fragmentShader' ).textContent
 
         } );
 
+
         //
 
-        mesh = new THREE.Mesh( geometry, shaderMaterial );
+        mesh = new THREE.Mesh( geometry, meshMaterial );
 
         scene.add( mesh );
 
@@ -183,11 +265,6 @@
         container.appendChild( renderer.domElement );
 
         controls = new TrackballControls( camera, renderer.domElement );
-
-        stats = new Stats();
-        container.appendChild( stats.dom );
-
-        //
 
         window.addEventListener( 'resize', onWindowResize );
 
@@ -207,14 +284,11 @@
         requestAnimationFrame( animate );
 
         render();
-
-        stats.update();
-
     }
 
     function render() {
 
-        const time = Date.now() * 0.001;
+        const time = Date.now() * 0.0015;
 
         uniforms.amplitude.value = 1.0 + Math.sin( time * 0.5 );
 
@@ -225,8 +299,126 @@
     }
 
 
+
 </script>
 
-</body>
+<!-----------------------------------------------------------------------------
+    import { TessellateModifier } from './jsm/modifiers/TessellateModifier.js';
+    import * as THREE from './build/three.module.js';
 
+    let mesh, uniforms;
+
+    const loader = new THREE.FontLoader();
+    loader.load('fonts/helvetiker_bold.typeface.json',function(font){
+        init(font);
+        basicInit();
+        animate1();
+    });
+
+    function init( font ) {
+        camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
+        camera.position.set( 0, 0, 200 );
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 1, 1, 1 );
+
+        //
+        let geometry = new THREE.TextGeometry( 'ZHENXIANG', {
+
+            font: font,
+
+            size: 35,
+            height: 5,
+            curveSegments: 3,
+
+            bevelThickness: 1,
+            bevelSize: 1,
+            bevelEnabled: true
+
+        } );
+        geometry.center();
+
+        const tessellateModifier = new TessellateModifier(1,3);
+        geometry = tessellateModifier.modify( geometry );
+        //
+
+        const numFaces = geometry.attributes.position.count / 3;
+
+        const colors = new Float32Array(numFaces * 3 * 3);
+        const displacement = new Float32Array(numFaces * 3 * 3);
+
+        const color = new THREE.Color();
+
+        for(let f=0;f<numFaces;f++){
+            const index = 9*f;
+
+            const h = 0;
+            const s = 0.2 + 0.3 * Math.random();
+            const l = 0.2 + 0.3 * Math.random();
+
+            color.setHSL(h,s,l);
+
+            const d = 10 * (0.5 - Math.random());
+
+            for(let i=0;i<3;i++){
+                colors[ index + ( 3 * i ) ] = color.r;
+                colors[ index + ( 3 * i ) + 1 ] = color.g;
+                colors[ index + ( 3 * i ) + 2 ] = color.b;
+
+                displacement[ index + ( 3 * i ) ] = d;
+                displacement[ index + ( 3 * i ) + 1 ] = d;
+                displacement[ index + ( 3 * i ) + 2 ] = d;
+            }
+        }
+
+        geometry.setAttribute('customColor', new THREE.BufferAttribute(colors,3));
+        geometry.setAttribute('displacement', new THREE.BufferAttribute(displacement,3));
+
+
+        //
+        uniforms = {
+            amplitude: { value: 0.0 },
+            'lightPositions' : { 'type' : 'v3v', 'value' : []},
+            'lightColors' : { 'type' : 'v3v', 'value' : []},
+        };
+
+
+        meshMaterial = new THREE.ShaderMaterial( {
+            uniforms : uniforms,
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragmentShader').textContent,
+        });
+
+
+        addLight1(new THREE.Vector3(50, 50, 100), new THREE.Vector3(25000, 25000, 25000));
+        addLight1(new THREE.Vector3(-60, 20, -60), new THREE.Vector3(4000, 4000, 4000));
+
+        scene.add(new THREE.Mesh(geometry,meshMaterial));
+    }
+
+    function addLight1(position, color) {
+        lightPositions.push(position);
+        meshMaterial.uniforms.lightColors.value.push(color);
+        meshMaterial.fragmentShader = '#define NUM_LIGHTS ' + lightPositions.length + '\n' + document.getElementById('fragmentShader').textContent
+    }
+
+    function animate1() {
+        requestAnimationFrame( animate );
+        controls.update();
+        render1();
+    }
+    function render1() {
+
+        const time = Date.now() * 0.0015;
+
+        uniforms.amplitude.value = 1.0 + Math.sin( time * 0.5 );
+
+        controls.update();
+
+        renderer.render( scene, camera );
+
+    }
+
+------------------------------------------------------------------------------>
+</body>
 </html>
