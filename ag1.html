@@ -1,0 +1,110 @@
+<html>
+
+<head>
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 15 (filtered)">
+<style>
+<!--
+ /* Font Definitions */
+ @font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:DengXian;
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:"\@DengXian";
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
+ /* Style Definitions */
+ p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:8.0pt;
+	margin-left:0in;
+	line-height:107%;
+	font-size:11.0pt;
+	font-family:"Calibri",sans-serif;}
+.MsoChpDefault
+	{font-family:"Calibri",sans-serif;}
+.MsoPapDefault
+	{margin-bottom:8.0pt;
+	line-height:107%;}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+-->
+</style>
+
+</head>
+
+<body lang=EN-US style='word-wrap:break-word'>
+
+<div class=WordSection1>
+
+<table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0
+ style='border-collapse:collapse;border:none'>
+ <tr>
+  <td width=623 valign=top style='width:467.5pt;border-top:solid windowtext 1.0pt;
+  border-left:none;border-bottom:solid windowtext 1.0pt;border-right:none;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'><b>Algorithm a</b>
+  : The main bistable auxetic pattern algorithm</p>
+  </td>
+ </tr>
+ <tr>
+  <td width=623 valign=top style='width:467.5pt;border:none;border-bottom:solid windowtext 1.0pt;
+  padding:0in 5.4pt 0in 5.4pt'>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>INPUT: conical
+  mesh K(V.E.F), offset h,  reference orientation X <span lang=ZH-CN
+  style='font-family:DengXian'>&#8712;</span> C<sup>|V|</sup>, starting tilted
+  angle &#968;</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>OUTPUT:
+  coordinates of planar bistable auxetic patterns S and its curved
+  configuration S’</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>&nbsp;</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>1:  <b>procedure</b>
+  BISTABLE_AUXETIC_PATTERN(K,h,X,&#968;)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>2:            <span
+  lang=ZH-CN style='font-family:DengXian'>&#945;</span><span lang=ZH-CN> </span><span
+  lang=ZH-CN style='font-family:DengXian'>&#8592;</span> DIHEDRAL_ANGLE(K)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>3:            K<sub>n</sub>
+  <span lang=ZH-CN style='font-family:DengXian'>&#8592;</span>
+  NEUTRAL_MESH(K,h)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>4:            K<sub>n</sub><sup>'</sup><span
+  lang=ZH-CN style='font-family:DengXian'>&#8592;</span> FLIP_MESH(K<sub>n</sub>)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>5:            M
+  <span lang=ZH-CN style='font-family:DengXian'>&#8592;</span>
+  PROJECTION_MATRIX(K, K<sub>n</sub>, K<sub>n</sub><sup>'</sup>)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>6:            <span
+  lang=ZH-CN style='font-family:DengXian'>&#969;</span>,s <span lang=ZH-CN
+  style='font-family:DengXian'>&#8592;</span> VERTEX_DATA(P, K<sub>n</sub><sup>'</sup>)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>7:            T
+  <span lang=ZH-CN style='font-family:DengXian'>&#8592;</span> GRAPH_SEARCH_TREE(K<sub>n</sub><sup>'</sup>)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>8:            h,
+  p <span lang=ZH-CN style='font-family:DengXian'>&#8592;</span> HINGES_SOLVE(T,
+  K<sub>n</sub><sup>'</sup>,<span lang=ZH-CN style='font-family:DengXian'>&#945;</span>,<span
+  lang=ZH-CN style='font-family:DengXian'>&#969;</span>,s,<span lang=ZH-CN
+  style='font-family:DengXian'>&#968;</span>)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>9:            S,S'
+  <span lang=ZH-CN style='font-family:DengXian'>&#8592;</span>
+  PHYSICAL_COORDINATES(h,p,M)</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>10:         <b>return</b>
+  S,S'</p>
+  <p class=MsoNormal style='margin-bottom:0in;line-height:normal'>11:  <b>end
+  procedure</b></p>
+  </td>
+ </tr>
+</table>
+
+<p class=MsoNormal>&nbsp;</p>
+
+</div>
+
+</body>
+
+</html>
